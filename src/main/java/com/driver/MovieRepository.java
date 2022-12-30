@@ -1,88 +1,119 @@
 package com.driver;
 
+import java.util.*;
+
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
 @Repository
 public class MovieRepository {
-    private Map<String,Movie> Moviemap;
-    private Map<String,Director> Directormap;
-    private Map<String,List<String>> DirectorMovieMap;
 
-    public MovieRepository() {
-        Moviemap = new HashMap<>();
-        Directormap = new HashMap<>();
-        DirectorMovieMap = new HashMap<>();
+    private HashMap<String, Movie> movieMap;
+    private HashMap<String, Director> directorMap;
+    private HashMap<String, List<String>> directorMovieMapping;
+
+    //Pair is : DirectorName, List of Movie Names
+
+
+    //Initialization is very important :
+
+    public MovieRepository(){
+        this.movieMap = new HashMap<String, Movie>();
+        this.directorMap = new HashMap<String, Director>();
+        this.directorMovieMapping = new HashMap<String, List<String>>();
     }
+
     public void saveMovie(Movie movie){
-       Moviemap.put(movie.getName(), movie);
+        movieMap.put(movie.getName(), movie);
     }
+
     public void saveDirector(Director director){
-        Directormap.put(director.getName(), director);
+        directorMap.put(director.getName(), director);
     }
+
     public void saveMovieDirectorPair(String movie, String director){
-         if(Moviemap.containsKey(movie) && Directormap.containsKey(director)){
-             List<String> currmoviesBydirector = new ArrayList<>();
-             if(DirectorMovieMap.containsKey(director)){
-                 currmoviesBydirector = DirectorMovieMap.get(director);
-                 currmoviesBydirector.add(movie);
-                 DirectorMovieMap.put(director,currmoviesBydirector);
-             }
-         }
+
+        //1. Add the movie into Datbase ---> WRONG bcz I dont have te movie object
+
+        if(movieMap.containsKey(movie)&&directorMap.containsKey(director)){
+
+            List<String> currentMoviesByDirector = new ArrayList<>();
+
+            if(directorMovieMapping.containsKey(director))
+            currentMoviesByDirector = directorMovieMapping.get(director);
+
+            currentMoviesByDirector.add(movie);
+
+            directorMovieMapping.put(director,currentMoviesByDirector);
+
+        }
+
     }
-    public Movie findMovie(String name){
-        return Moviemap.get(name);
+
+    public Movie findMovie(String movie){
+        return movieMap.get(movie);
     }
-    public Director findDirector(String name){
-        return Directormap.get(name);
+
+    public Director findDirector(String director){
+        return directorMap.get(director);
     }
+
     public List<String> findMoviesFromDirector(String director){
-      List<String> movies = new ArrayList<>();
-        if(DirectorMovieMap.containsKey(director)) movies = DirectorMovieMap.get(director);
-        return movies;
+        List<String> moviesList = new ArrayList<String>();
+        if(directorMovieMapping.containsKey(director)) moviesList = directorMovieMapping.get(director);
+        return moviesList;
     }
+
     public List<String> findAllMovies(){
-        return new ArrayList<>(Moviemap.keySet());
+        return new ArrayList<>(movieMap.keySet());
     }
-   public void deleteDirector(String director){
-        if(DirectorMovieMap.containsKey(director)){
-        List<String> movies = new ArrayList<>();
-        movies = DirectorMovieMap.get(director);
-        for(String Movies:movies){
-            if(Moviemap.containsKey(Movies)){
-                Moviemap.remove(Movies);
+
+    public void deleteDirector(String director){
+
+        List<String> movies = new ArrayList<String>();
+        if(directorMovieMapping.containsKey(director)){
+            //1. Find the movie names by director from the pair
+            movies = directorMovieMapping.get(director);
+
+            //2. Deleting all the movies from movieDb by using movieName
+            for(String movie: movies){
+                if(movieMap.containsKey(movie)){
+                    movieMap.remove(movie);
+                }
             }
+
+            //3. Deleteing the pair
+            directorMovieMapping.remove(director);
         }
-        DirectorMovieMap.remove(director);
-        }
-        if(Directormap.containsKey(director)){
-            Directormap.remove(director);
+
+        //4. Delete the director from directorDb.
+        if(directorMap.containsKey(director)){
+            directorMap.remove(director);
         }
     }
+
     public void deleteAllDirector(){
+
         HashSet<String> moviesSet = new HashSet<String>();
 
         //Deleting the director's map
-        Directormap = new HashMap<>();
+        directorMap = new HashMap<>();
 
         //Finding out all the movies by all the directors combined
-        for(String director: DirectorMovieMap.keySet()){
+        for(String director: directorMovieMapping.keySet()){
 
             //Iterating in the list of movies by a director.
-            for(String movie: DirectorMovieMap.get(director)){
+            for(String movie: directorMovieMapping.get(director)){
                 moviesSet.add(movie);
             }
         }
 
         //Deleting the movie from the movieDb.
         for(String movie: moviesSet){
-            if(Moviemap.containsKey(movie)){
-               Moviemap.remove(movie);
+            if(movieMap.containsKey(movie)){
+                movieMap.remove(movie);
             }
         }
         //clearing the pair.
-      DirectorMovieMap = new HashMap<>();
+        directorMovieMapping = new HashMap<>();
     }
-
-
 }
